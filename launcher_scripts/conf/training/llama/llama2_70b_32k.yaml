@@ -7,12 +7,12 @@ hydra:
     - file:///opt/NeMo/examples/nlp/language_modeling/conf
 
 run:
-  name: llama2_7b_h100_prec${training.trainer.precision}_nodes${training.trainer.num_nodes}_cp${training.model.context_parallel_size}_tp${training.model.tensor_model_parallel_size}_pp${training.model.pipeline_model_parallel_size}_vp${training.model.virtual_pipeline_model_parallel_size}_gbs${training.model.global_batch_size}_mbs${training.model.micro_batch_size}_ckpt${training.model.activations_checkpoint_num_layers}_seq${training.model.encoder_seq_length}_${training.model.data.data_impl}
+  name: llama2_70b_h100_prec${training.trainer.precision}_nodes${training.trainer.num_nodes}_cp${training.model.context_parallel_size}_tp${training.model.tensor_model_parallel_size}_pp${training.model.pipeline_model_parallel_size}_vp${training.model.virtual_pipeline_model_parallel_size}_gbs${training.model.global_batch_size}_mbs${training.model.micro_batch_size}_ckpt${training.model.activations_checkpoint_num_layers}_seq${training.model.encoder_seq_length}_${training.model.data.data_impl}
   results_dir: ${base_results_dir}/${.name}
   time_limit: "04:00:00"
   dependency: "singleton"
 trainer:
-  num_nodes: 16
+  num_nodes: 64
   devices: 8
   accelerator: gpu
   precision: bf16
@@ -55,19 +55,20 @@ exp_manager:
 model:
   mcore_gpt: true
   micro_batch_size: 1
-  global_batch_size: 16
+  global_batch_size: 2048
   rampup_batch_size: null
   context_parallel_size: 8
   tensor_model_parallel_size: 8
-  pipeline_model_parallel_size: 2
-  virtual_pipeline_model_parallel_size: null
-  encoder_seq_length: 131072
-  max_position_embeddings: 131072
-  num_layers: 32
-  hidden_size: 4096
-  ffn_hidden_size: 11008
-  num_attention_heads: 32
-  init_method_std: 0.01
+  pipeline_model_parallel_size: 8
+  virtual_pipeline_model_parallel_size: 10
+  encoder_seq_length: 32768
+  max_position_embeddings: 32768
+  num_layers: 80
+  hidden_size: 8192
+  ffn_hidden_size: 28672
+  num_attention_heads: 64
+  num_query_groups: 8
+  init_method_std: 0.008944
   use_scaled_init_method: true
   hidden_dropout: 0.0
   attention_dropout: 0.0
@@ -171,8 +172,8 @@ model:
     data_prefix: # Should be weight path weight path... for a blended dataset
     - .5
     - ${data_dir}/my-llama_00_text_document
-    - .5
-    - ${data_dir}/my-llama_01_text_document
+    # - .0333
+    # - ${data_dir}/my-llama_01_text_document
     # - .0333
     # - ${data_dir}/my-llama_02_text_document
     # - .0333

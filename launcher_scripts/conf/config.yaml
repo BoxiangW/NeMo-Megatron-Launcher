@@ -3,7 +3,9 @@ defaults:
   - cluster: bcm  # Set to bcm for BCM and BCP clusters. Set to k8s for a k8s cluster.
   - data_curation: common_crawl/curate_common_crawl
   - data_preparation: gpt3/download_gpt3_pile #steerlm/steerlm_data_prep1 or steerlm/steerlm_data_prep2_reg
-  - training: llama/llama2_7b_128k
+  # - training: gpt3/temp
+  - training: llama/llama3_8b
+  # - training: mixtral/mixtral_8x7b_64k
   - conversion: gpt3/convert_gpt3
   - conversion_hf2nemo: hf_llama2/convert_llama2_nemo
   - fw_inference: null
@@ -31,10 +33,13 @@ debug: False
 
 stages:
   - training
+  # - fine_tuning
 
 results:
     base: /home/boxiangw/results/long_context/
-    dir: llama/llama2_7b_128k
+    # dir: gpt3/temp
+    dir: llama/llama3_8b
+    # dir: mixtral/mixtral_8x7b_64k
 code: /home/boxiangw/NeMo
 
 #preproc_data: /lustre/fsw/joc/big_nlp/t5/dataset/Pile # T5 dataset
@@ -48,13 +53,14 @@ launcher_scripts_path: /home/boxiangw/NeMo-Megatron-Launcher/launcher_scripts
 data_dir: ${preproc_data}  # Location to store and read the data.
 base_results_dir: ${results.base}/${results.dir}  # Location to store the results, checkpoints and logs.
 container_mounts: # List of additional paths to mount to container. They will be mounted to same path.
-  - ${code}:/opt/NeMo
+  # - ${code}:/opt/NeMo
+  # - /home/boxiangw/megatron-lm:/opt/megatron-lm
   - /lustre:/lustre
 
-container: nvcr.io/nvidia/nemo:24.03.01.framework
+container: nvcr.io/nvidia/pytorch:24.10-py3 #nvcr.io/nvidian/nemo:nightly # nvcr.io/nvidia/pytorch:24.10-py3
 # container: gitlab-master.nvidia.com/xren/nemo_megatron_perf_optimization:nemo_2308_cp_ub_fa2
 
-wandb_api_key_file: null  # File where the w&B api key is stored. Key must be on the first line.
+wandb_api_key_file: /home/boxiangw/.config/wandb/key  # File where the w&B api key is stored. Key must be on the first line.
 wandb_api_bcp_secret_key: null  # For BCP clusters, read the W&B api key directly from the environment variable set as a secret from BCP. The value must match the name of the environment variable in BCP, such as WANDB_TOKEN.
 
 bcp_no_redirect: True  # If True, all stdout and stderr will not be redirected and appear in the standard logs. If False, all stdout and stderr output will be redirected to individual files on a per-rank basis. Ignored for non-BCP clusters.
@@ -71,7 +77,7 @@ env_vars:
   NCCL_NVLS_ENABLE: 0
   NVTE_DP_AMAX_REDUCE_INTERVAL: 0 # Diable FP8 AMAX reduction in the data-parallel domain
   NVTE_ASYNC_AMAX_REDUCTION: 1 # Enable asynchronous FP8 AMAX reduction
-  NVTE_FUSED_ATTN: 0 # Disable cudnn FA until we've tested it more
+  NVTE_FUSED_ATTN: 1 # Disable cudnn FA until we've tested it more
 
 # GPU Mapping
 numa_mapping:
